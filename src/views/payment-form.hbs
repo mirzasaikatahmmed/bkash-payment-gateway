@@ -1,0 +1,76 @@
+{{>header}}
+<div class="payment-page">
+  <div class="card payment-card">
+    <h1>Make a Payment</h1>
+    <p class="subtitle">Enter your details and pay securely with bKash</p>
+
+    <form action="/api/payments/initiate" method="POST" id="paymentForm">
+      <div class="form-group">
+        <label for="customerName">Full Name</label>
+        <input
+          type="text"
+          id="customerName"
+          name="customerName"
+          placeholder="Enter your full name"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="customerPhone">Phone Number</label>
+        <input
+          type="tel"
+          id="customerPhone"
+          name="customerPhone"
+          placeholder="01XXXXXXXXX"
+          pattern="01[3-9][0-9]{8}"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="amount">Amount (BDT)</label>
+        <input
+          type="number"
+          id="amount"
+          name="amount"
+          placeholder="Enter amount"
+          min="1"
+          step="0.01"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Payment Method</label>
+        <div class="payment-method selected">
+          <input type="radio" name="gateway" value="bkash" checked hidden />
+          <div class="method-content">
+            <svg class="bkash-logo" viewBox="0 0 24 24" width="40" height="40">
+              <rect width="24" height="24" rx="4" fill="#E2136E"/>
+              <text x="12" y="17" text-anchor="middle" fill="white" font-size="10" font-weight="bold">b</text>
+            </svg>
+            <div>
+              <strong>bKash</strong>
+              <span>Mobile Banking</span>
+            </div>
+            <span class="check-icon">&#10003;</span>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" id="payBtn">
+        Pay with bKash
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.getElementById('paymentForm').addEventListener('submit', function() {
+    var btn = document.getElementById('payBtn');
+    btn.disabled = true;
+    btn.textContent = 'Redirecting to bKash...';
+  });
+</script>
+{{>footer}}

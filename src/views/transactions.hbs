@@ -1,0 +1,154 @@
+{{>header}}
+<div class="transactions-page">
+  <div class="page-header">
+    <h1>Transaction History</h1>
+    <a href="/" class="btn btn-primary btn-sm">New Payment</a>
+  </div>
+
+  <div class="table-wrapper">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Customer</th>
+          <th>Phone</th>
+          <th>Amount</th>
+          <th>TrxID</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each payments}}
+        <tr>
+          <td>{{this.createdAt}}</td>
+          <td>{{this.customerName}}</td>
+          <td>{{this.customerPhone}}</td>
+          <td class="amount">{{this.amount}} BDT</td>
+          <td><code>{{this.bkashTrxId}}</code></td>
+          <td>
+            <span class="badge badge-{{lowercase this.status}}">
+              {{this.status}}
+            </span>
+          </td>
+          <td>
+            {{#ifEquals this.status "COMPLETED"}}
+            <button
+              class="btn btn-danger btn-sm"
+              onclick="openRefundModal('{{this.id}}', '{{this.amount}}', '{{this.refundedAmount}}')"
+            >
+              Refund
+            </button>
+            {{/ifEquals}}
+            {{#ifEquals this.status "PARTIALLY_REFUNDED"}}
+            <button
+              class="btn btn-danger btn-sm"
+              onclick="openRefundModal('{{this.id}}', '{{this.amount}}', '{{this.refundedAmount}}')"
+            >
+              Refund More
+            </button>
+            {{/ifEquals}}
+          </td>
+        </tr>
+        {{else}}
+        <tr>
+          <td colspan="7" class="empty-state">
+            <p>No transactions yet.</p>
+            <a href="/" class="btn btn-primary">Make your first payment</a>
+          </td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+
+  {{#if pagination}}
+  <div class="pagination">
+    {{#if (gt pagination.page 1)}}
+    <a href="/transactions?page={{subtract pagination.page 1}}" class="btn btn-outline btn-sm">&larr; Previous</a>
+    {{/if}}
+    <span class="page-info">Page {{pagination.page}} of {{pagination.totalPages}}</span>
+    {{#if (lt pagination.page pagination.totalPages)}}
+    <a href="/transactions?page={{add pagination.page 1}}" class="btn btn-outline btn-sm">Next &rarr;</a>
+    {{/if}}
+  </div>
+  {{/if}}
+</div>
+
+<!-- Refund Modal -->
+<div class="modal-overlay" id="refundModal" style="display: none;">
+  <div class="card modal-card">
+    <h2>Process Refund</h2>
+    <form id="refundForm">
+      <input type="hidden" id="refundPaymentId" name="paymentId" />
+      <div class="form-group">
+        <label>Max Refundable Amount: <strong id="maxRefundable"></strong> BDT</label>
+        <input
+          type="number"
+          id="refundAmount"
+          name="amount"
+          placeholder="Refund amount"
+          min="1"
+          step="0.01"
+          required
+        />
+      </div>
+      <div class="form-group">
+        <label for="refundReason">Reason</label>
+        <input
+          type="text"
+          id="refundReason"
+          name="reason"
+          placeholder="Reason for refund"
+          required
+        />
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeRefundModal()">Cancel</button>
+        <button type="submit" class="btn btn-danger">Confirm Refund</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function openRefundModal(paymentId, totalAmount, refundedAmount) {
+    var max = (parseFloat(totalAmount) - parseFloat(refundedAmount)).toFixed(2);
+    document.getElementById('refundPaymentId').value = paymentId;
+    document.getElementById('maxRefundable').textContent = max;
+    document.getElementById('refundAmount').max = max;
+    document.getElementById('refundModal').style.display = 'flex';
+  }
+
+  function closeRefundModal() {
+    document.getElementById('refundModal').style.display = 'none';
+  }
+
+  document.getElementById('refundForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var data = {
+      paymentId: document.getElementById('refundPaymentId').value,
+      amount: document.getElementById('refundAmount').value,
+      reason: document.getElementById('refundReason').value
+    };
+
+    fetch('/api/payments/refund', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(result) {
+      if (result.success !== false) {
+        alert('Refund processed successfully!');
+        window.location.reload();
+      } else {
+        alert('Refund failed: ' + (result.message || 'Unknown error'));
+      }
+    })
+    .catch(function(err) {
+      alert('Refund failed: ' + err.message);
+    });
+  });
+</script>
+{{>footer}}

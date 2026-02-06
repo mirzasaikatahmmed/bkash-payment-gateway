@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: bkash_pg
+    restart: unless-stopped
+    ports:
+      - '${DB_PORT:-5432}:5432'
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-bkash_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-bkash_pass}
+      POSTGRES_DB: ${DB_DATABASE:-bkash_payment}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+volumes:
+  pg_data:
